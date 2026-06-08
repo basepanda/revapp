@@ -6,6 +6,7 @@ export interface Question {
   options: string[];
   correctAnswer: number;
   category: string;
+  subject?: string;
 }
 
 export const TOPICS = [
@@ -53,352 +54,647 @@ export const TOPICS = [
   { id: "resources", name: "Resources", category: "Earth Science", subject: "Science" },
 ];
 
+const QUESTIONS_PER_TOPIC = 20;
+
+function pick<T>(arr: T[], i: number) {
+  return arr[i % arr.length];
+}
+
+function shuffleOptions(correct: string, wrongs: string[]) {
+  const options = [correct, ...wrongs.slice(0, 3)];
+  return options;
+}
+
+function makeMathQuestion(
+  id: string,
+  topic: string,
+  category: string,
+  question: string,
+  explanation: string,
+  correct: string,
+  wrongs: string[]
+): Question {
+  return {
+    id,
+    topic,
+    category,
+    question,
+    explanation,
+    options: shuffleOptions(correct, wrongs),
+    correctAnswer: 0,
+  };
+}
+
+function makeScienceQuestion(
+  id: string,
+  topic: string,
+  category: string,
+  question: string,
+  explanation: string,
+  correct: string,
+  wrongs: string[]
+): Question {
+  return {
+    id,
+    topic,
+    category,
+    question,
+    explanation,
+    options: shuffleOptions(correct, wrongs),
+    correctAnswer: 0,
+  };
+}
+
 function generateQuestions(topicId: string): Question[] {
   const questions: Question[] = [];
-  const questionTemplates: { [key: string]: (i: number) => Question } = {
-    "hcf": (i) => ({
-      id: `hcf-${i}`,
-      topic: "hcf",
-      category: "Number",
-      question: `Find the HCF of ${12 + i} and ${18 + i * 2}`,
-      explanation: "The HCF (Highest Common Factor) is the largest number that divides evenly into both numbers. Find all factors of each number and identify the largest one they share.",
-      options: [`${6 + i}`, `${3 + i}`, `${2 + i}`, `${9 + i}`],
-      correctAnswer: 0,
-    }),
-    "solving-equations": (i) => ({
-      id: `solving-equations-${i}`,
-      topic: "solving-equations",
-      category: "Algebra",
-      question: `Solve: 2x + ${4 + i} = ${12 + i * 2}`,
-      explanation: "To solve an equation, isolate the variable x by performing the same operations on both sides. First subtract the constant, then divide by the coefficient of x.",
-      options: [`${4 + i}`, `${3 + i}`, `${5 + i}`, `${2 + i}`],
-      correctAnswer: 0,
-    }),
-    "rounding": (i) => ({
-      id: `rounding-${i}`,
-      topic: "rounding",
-      category: "Number",
-      question: `Round ${3.456 + i * 0.1} to 1 decimal place`,
-      explanation: "Look at the second decimal place. If it's 5 or more, round the first decimal place up. If it's less than 5, keep the first decimal place as is.",
-      options: [`${3.5 + i * 0.1}`, `${3.4 + i * 0.1}`, `${3.6 + i * 0.1}`, `${3.3 + i * 0.1}`],
-      correctAnswer: 0,
-    }),
-    "ratio": (i) => ({
-      id: `ratio-${i}`,
-      topic: "ratio",
-      category: "Number",
-      question: `Simplify the ratio ${2 * (i + 1)}:${4 * (i + 1)}`,
-      explanation: "To simplify a ratio, divide both parts by their greatest common factor. Keep dividing until no common factors remain.",
-      options: [`1:2`, `2:4`, `${i + 1}:${2 * (i + 1)}`, `1:1`],
-      correctAnswer: 0,
-    }),
-    "form-solve-equations": (i) => ({
-      id: `form-solve-equations-${i}`,
-      topic: "form-solve-equations",
-      category: "Algebra",
-      question: `Form an equation and solve: A number plus ${5 + i} equals ${15 + i * 2}. What is the number?`,
-      explanation: "Convert the word problem into an equation. Let x be the unknown number. Write it as x + (constant) = result, then solve for x.",
-      options: [`${10 + i}`, `${8 + i}`, `${12 + i}`, `${6 + i}`],
-      correctAnswer: 0,
-    }),
-    "enlargement": (i) => ({
-      id: `enlargement-${i}`,
-      topic: "enlargement",
-      category: "Geometry",
-      question: `A shape is enlarged by scale factor ${2 + i}. If the original length is ${3 + i} cm, what is the new length?`,
-      explanation: "When a shape is enlarged, multiply all lengths by the scale factor. New length = Original length × Scale factor.",
-      options: [`${(3 + i) * (2 + i)}`, `${(3 + i) + (2 + i)}`, `${(3 + i) - (2 + i)}`, `${(3 + i) / (2 + i)}`],
-      correctAnswer: 0,
-    }),
-    "pythagoras": (i) => ({
-      id: `pythagoras-${i}`,
-      topic: "pythagoras",
-      category: "Geometry",
-      question: `Right triangle with legs ${3 + i} and ${4 + i}. What is the hypotenuse?`,
-      explanation: "Use Pythagoras' theorem: a² + b² = c², where a and b are the legs and c is the hypotenuse. Substitute the values and solve for c.",
-      options: [`${Math.sqrt((3 + i) ** 2 + (4 + i) ** 2).toFixed(2)}`, `${5 + i}`, `${7 + i}`, `${6 + i}`],
-      correctAnswer: 0,
-    }),
-    "tree-diagrams": (i) => ({
-      id: `tree-diagrams-${i}`,
-      topic: "tree-diagrams",
-      category: "Probability",
-      question: `A tree diagram shows two branches with probabilities 0.${4 + i} and 0.${6 - i}. What is the sum?`,
-      explanation: "In a tree diagram, the probabilities on all branches from one point must add up to 1. This represents all possible outcomes.",
-      options: [`1`, `0.${9}`, `0.${8}`, `1.${9}`],
-      correctAnswer: 0,
-    }),
-    "angles-polygons": (i) => ({
-      id: `angles-polygons-${i}`,
-      topic: "angles-polygons",
-      category: "Geometry",
-      question: `Sum of interior angles of a ${5 + i}-sided polygon is?`,
-      explanation: "The sum of interior angles in a polygon with n sides is (n - 2) × 180°. Subtract 2 from the number of sides, then multiply by 180.",
-      options: [`${(5 + i - 2) * 180}°`, `${(5 + i) * 180}°`, `${(5 + i) * 90}°`, `${(5 + i) * 360}°`],
-      correctAnswer: 0,
-    }),
-    "factor": (i) => ({
-      id: `factor-${i}`,
-      topic: "factor",
-      category: "Algebra",
-      question: `List all factors of ${12 + i * 2}`,
-      explanation: "Factors are numbers that divide evenly into the given number with no remainder. Check each whole number starting from 1.",
-      options: [`1, ${12 + i * 2}, 2, ${6 + i}, 3, ${4 + i}`, `1, 2, 3, 4, 6, 12`, `${12 + i * 2} only`, `None`],
-      correctAnswer: 0,
-    }),
-    "prime": (i) => ({
-      id: `prime-${i}`,
-      topic: "prime",
-      category: "Number",
-      question: `Is ${17 + i * 2} a prime number?`,
-      explanation: "A prime number has exactly two factors: 1 and itself. It cannot be divided evenly by any other number.",
-      options: [`Yes`, `No`, `Maybe`, `Not defined`],
-      correctAnswer: 0,
-    }),
-    "decimal-place": (i) => ({
-      id: `decimal-place-${i}`,
-      topic: "decimal-place",
-      category: "Number",
-      question: `Round ${4.5678 + i * 0.01} to 2 decimal places`,
-      explanation: "Look at the third decimal place. If it's 5 or more, round the second decimal place up. Otherwise, keep it as is.",
-      options: [`${(4.57 + i * 0.01).toFixed(2)}`, `${(4.56 + i * 0.01).toFixed(2)}`, `${(4.58 + i * 0.01).toFixed(2)}`, `${(4.59 + i * 0.01).toFixed(2)}`],
-      correctAnswer: 0,
-    }),
-    "significant-figure": (i) => ({
-      id: `significant-figure-${i}`,
-      topic: "significant-figure",
-      category: "Number",
-      question: `Write ${45678 + i * 100} to 2 significant figures`,
-      explanation: "Significant figures are the important digits in a number. Start counting from the first non-zero digit. Round to the required number of significant figures.",
-      options: [`${46000 + i * 100}`, `${45000 + i * 100}`, `${47000 + i * 100}`, `${44000 + i * 100}`],
-      correctAnswer: 0,
-    }),
-    "scale-factor": (i) => ({
-      id: `scale-factor-${i}`,
-      topic: "scale-factor",
-      category: "Geometry",
-      question: `Original length ${5 + i}, new length ${15 + i * 3}. What is the scale factor?`,
-      explanation: "The scale factor is the ratio of the new length to the original length. Scale factor = New length ÷ Original length.",
-      options: [`${(15 + i * 3) / (5 + i)}`, `${(5 + i) / (15 + i * 3)}`, `${(15 + i * 3) - (5 + i)}`, `${(15 + i * 3) + (5 + i)}`],
-      correctAnswer: 0,
-    }),
-    "factorise": (i) => ({
-      id: `factorise-${i}`,
-      topic: "factorise",
-      category: "Algebra",
-      question: `Factorise: ${4 + i * 2}x + ${8 + i * 4}`,
-      explanation: "Factorising means finding the common factors and taking them out. Look for the greatest common factor (GCF) of all terms.",
-      options: [`${2 + i}(${2 + i}x + ${4 + i * 2})`, `2(${2 + i}x + ${4 + i * 2})`, `${4 + i * 2}(x + 2)`, `x(${4 + i * 2} + ${8 + i * 4})`],
-      correctAnswer: 0,
-    }),
-    "probability": (i) => ({
-      id: `probability-${i}`,
-      topic: "probability",
-      category: "Probability",
-      question: `Probability of rolling a ${2 + i} on a fair die is?`,
-      explanation: "Probability = Number of favorable outcomes ÷ Total number of possible outcomes. A fair die has 6 faces, each with equal chance.",
-      options: [`1/6`, `1/${2 + i}`, `${2 + i}/6`, `1/2`],
-      correctAnswer: 0,
-    }),
-    "interest": (i) => ({
-      id: `interest-${i}`,
-      topic: "interest",
-      category: "Number",
-      question: `Simple interest on £${100 + i * 10} at ${5 + i}% per year for 1 year is £?`,
-      explanation: "Simple interest = Principal × Rate × Time. Multiply the amount by the percentage rate (as a decimal) and the time period in years.",
-      options: [`£${(100 + i * 10) * (5 + i) / 100}`, `£${100 + i * 10}`, `£${(100 + i * 10) * (5 + i)}`, `£${(100 + i * 10) / (5 + i)}`],
-      correctAnswer: 0,
-    }),
-    // SCIENCE TOPICS - BIOLOGY
-    "cellular-processes": (i) => ({
-      id: `cellular-processes-${i}`,
-      topic: "cellular-processes",
-      category: "Biology",
-      subject: "Science",
-      question: `Which of the following is a key cellular process?`,
-      explanation: "Cellular processes include respiration, photosynthesis, protein synthesis, and cell division. These are the fundamental life activities that occur in cells.",
-      options: ["Respiration", "Digestion", "Photosynthesis", "All of the above"],
-      correctAnswer: 3,
-    }),
-    "cell-differentiation": (i) => ({
-      id: `cell-differentiation-${i}`,
-      topic: "cell-differentiation",
-      category: "Biology",
-      subject: "Science",
-      question: `What is cell differentiation?`,
-      explanation: "Cell differentiation is the process by which cells become specialized to perform specific functions. It involves changes in gene expression.",
-      options: ["Cells splitting into two", "Cells becoming specialized for a specific function", "Cells dying", "Cells growing larger"],
-      correctAnswer: 1,
-    }),
-    "osmosis": (i) => ({
-      id: `osmosis-${i}`,
-      topic: "osmosis",
-      category: "Biology",
-      subject: "Science",
-      question: `Osmosis is the movement of ${["water", "salt", "glucose", "ions"][i % 4]} across a ${["semi-permeable", "impermeable", "permeable", "non-porous"][i % 4]} membrane.`,
-      explanation: "Osmosis is the diffusion of water molecules across a semi-permeable membrane from an area of higher water potential to lower water potential.",
-      options: ["True", "False", "Sometimes", "Cannot determine"],
-      correctAnswer: 0,
-    }),
-    "enzyme": (i) => ({
-      id: `enzyme-${i}`,
-      topic: "enzyme",
-      category: "Biology",
-      subject: "Science",
-      question: `What do enzymes do in biological systems?`,
-      explanation: "Enzymes are biological catalysts that speed up chemical reactions without being used up. They lower the activation energy needed for reactions.",
-      options: ["Provide energy", "Speed up reactions", "Store genetic information", "Transport materials"],
-      correctAnswer: 1,
-    }),
-    "active-site": (i) => ({
-      id: `active-site-${i}`,
-      topic: "active-site",
-      category: "Biology",
-      subject: "Science",
-      question: `Where does a substrate bind on an enzyme?`,
-      explanation: "The substrate binds to the active site of an enzyme. The active site is the specific region where the enzyme and substrate interact.",
-      options: ["At the enzyme's inactive site", "At the active site", "Anywhere on the enzyme surface", "Outside the enzyme"],
-      correctAnswer: 1,
-    }),
-    "digestion": (i) => ({
-      id: `digestion-${i}`,
-      topic: "digestion",
-      category: "Biology",
-      subject: "Science",
-      question: `In which part of the digestive system is most nutrient absorption?`,
-      explanation: "The small intestine is where most nutrient absorption occurs. It has a large surface area with villi and microvilli to maximize absorption.",
-      options: ["Mouth", "Stomach", "Small intestine", "Large intestine"],
-      correctAnswer: 2,
-    }),
-    "nutrition": (i) => ({
-      id: `nutrition-${i}`,
-      topic: "nutrition",
-      category: "Biology",
-      subject: "Science",
-      question: `Which nutrient is essential for building and repairing body tissues?`,
-      explanation: "Proteins are essential for building and repairing body tissues. They are made up of amino acids and are crucial for cell growth and maintenance.",
-      options: ["Carbohydrates", "Proteins", "Fats", "Vitamins"],
-      correctAnswer: 1,
-    }),
-    // SCIENCE TOPICS - PHYSICS
-    "energy": (i) => ({
-      id: `energy-${i}`,
-      topic: "energy",
-      category: "Physics",
-      subject: "Science",
-      question: `Energy cannot be created or destroyed, only transformed. This is known as:`,
-      explanation: "This is the Law of Conservation of Energy. Energy can change from one form to another (e.g., kinetic to potential) but the total amount remains constant.",
-      options: ["Newton's Law", "Law of Conservation of Energy", "Law of Motion", "Law of Thermodynamics"],
-      correctAnswer: 1,
-    }),
-    "work-power": (i) => ({
-      id: `work-power-${i}`,
-      topic: "work-power",
-      category: "Physics",
-      subject: "Science",
-      question: `Work is calculated as Force × Distance. If a force of ${10 + i}N is applied over ${5 + i}m, how much work is done?`,
-      explanation: "Work = Force × Distance (when force is in the direction of motion). Multiply the force in Newtons by the distance in meters.",
-      options: [`${(10 + i) + (5 + i)}J`, `${(10 + i) - (5 + i)}J`, `${(10 + i) * (5 + i)}J`, `${(10 + i) / (5 + i)}J`],
-      correctAnswer: 2,
-    }),
-    "energy-stores": (i) => ({
-      id: `energy-stores-${i}`,
-      topic: "energy-stores",
-      category: "Physics",
-      subject: "Science",
-      question: `Which of the following is a type of energy store?`,
-      explanation: "Energy can be stored in various forms: gravitational potential, elastic potential, thermal, chemical, kinetic, nuclear, and electrical.",
-      options: ["Kinetic energy", "Gravitational potential energy", "Chemical energy", "All of the above"],
-      correctAnswer: 3,
-    }),
-    "energy-transfers": (i) => ({
-      id: `energy-transfers-${i}`,
-      topic: "energy-transfers",
-      category: "Physics",
-      subject: "Science",
-      question: `When a ball falls from a height, what type of energy conversion occurs?`,
-      explanation: "As a ball falls, gravitational potential energy is converted to kinetic energy. The total mechanical energy (kinetic + potential) remains constant.",
-      options: ["Kinetic to potential", "Potential to kinetic", "Chemical to thermal", "Electrical to kinetic"],
-      correctAnswer: 1,
-    }),
-    "energy-efficiency": (i) => ({
-      id: `energy-efficiency-${i}`,
-      topic: "energy-efficiency",
-      category: "Physics",
-      subject: "Science",
-      question: `If a machine has an efficiency of 80%, it means:`,
-      explanation: "Efficiency = (Useful energy output / Total energy input) × 100%. An 80% efficiency means 80% of input energy is used usefully, and 20% is wasted.",
-      options: ["80% of energy is wasted", "80% of energy is used usefully", "Only 80% of the machine works", "The machine produces 80% more energy"],
-      correctAnswer: 1,
-    }),
-    "power": (i) => ({
-      id: `power-${i}`,
-      topic: "power",
-      category: "Physics",
-      subject: "Science",
-      question: `Power is calculated as Energy ÷ Time. If ${100 + i * 10}J of energy is used in ${5 + i}s, what is the power?`,
-      explanation: "Power = Energy ÷ Time. It measures how quickly energy is transferred. The unit is Watts (W), where 1W = 1J/s.",
-      options: [`${(100 + i * 10) + (5 + i)}W`, `${(100 + i * 10) - (5 + i)}W`, `${(100 + i * 10) / (5 + i)}W`, `${(100 + i * 10) * (5 + i)}W`],
-      correctAnswer: 2,
-    }),
-    "non-renewable": (i) => ({
-      id: `non-renewable-${i}`,
-      topic: "non-renewable",
-      category: "Physics",
-      subject: "Science",
-      question: `Which of the following is a non-renewable energy source?`,
-      explanation: "Non-renewable energy sources (fossil fuels and nuclear) are finite and will eventually run out. They take millions of years to form.",
-      options: ["Solar", "Wind", "Coal", "Hydroelectric"],
-      correctAnswer: 2,
-    }),
-    "renewable": (i) => ({
-      id: `renewable-${i}`,
-      topic: "renewable",
-      category: "Physics",
-      subject: "Science",
-      question: `Which of the following is a renewable energy source?`,
-      explanation: "Renewable energy sources (solar, wind, hydroelectric, geothermal, biomass) are naturally replenished and sustainable.",
-      options: ["Natural gas", "Coal", "Wind", "Nuclear"],
-      correctAnswer: 2,
-    }),
-    // SCIENCE TOPICS - EARTH SCIENCE
-    "earth-science": (i) => ({
-      id: `earth-science-${i}`,
-      topic: "earth-science",
-      category: "Earth Science",
-      subject: "Science",
-      question: `The Earth's structure consists of:`,
-      explanation: "The Earth has three main layers: the crust (thin outer layer), mantle (thick middle layer), and core (inner solid and liquid layers).",
-      options: ["Only a crust", "Crust, mantle, and core", "Crust and magma", "Only a solid core"],
-      correctAnswer: 1,
-    }),
-    "atmosphere": (i) => ({
-      id: `atmosphere-${i}`,
-      topic: "atmosphere",
-      category: "Earth Science",
-      subject: "Science",
-      question: `Which gas makes up the majority of Earth's atmosphere?`,
-      explanation: "Nitrogen (N₂) makes up about 78% of the atmosphere. Oxygen makes up about 21%, with other gases making up the remaining 1%.",
-      options: ["Oxygen", "Carbon dioxide", "Nitrogen", "Helium"],
-      correctAnswer: 2,
-    }),
-    "resources": (i) => ({
-      id: `resources-${i}`,
-      topic: "resources",
-      category: "Earth Science",
-      subject: "Science",
-      question: `Which of the following is a finite natural resource?`,
-      explanation: "Finite resources (like fossil fuels and metals) are limited and will eventually run out. Renewable resources can be replenished naturally.",
-      options: ["Trees", "Water", "Oil", "Solar energy"],
-      correctAnswer: 2,
-    }),
-  };
 
-  // Generate 100 questions per topic
-  for (let i = 0; i < 100; i++) {
-    const generator = questionTemplates[topicId];
-    if (generator) {
-      questions.push(generator(i));
+  for (let i = 0; i < QUESTIONS_PER_TOPIC; i++) {
+    const n = i + 1;
+
+    switch (topicId) {
+      case "hcf": {
+        const a = 12 + n;
+        const b = 18 + n * 2;
+        const hcf = (x: number, y: number) => {
+          while (y !== 0) {
+            const t = y;
+            y = x % y;
+            x = t;
+          }
+          return x;
+        };
+        const ans = hcf(a, b);
+        questions.push(
+          makeMathQuestion(
+            `hcf-${n}`,
+            "hcf",
+            "Number",
+            `Find the highest common factor of ${a} and ${b}.`,
+            "The HCF is the largest number that divides into both numbers exactly.",
+            `${ans}`,
+            [`${ans + 1}`, `${Math.max(1, ans - 1)}`, `${ans * 2}`]
+          )
+        );
+        break;
+      }
+
+      case "solving-equations": {
+        const x = n + 2;
+        const c = 3 + n;
+        const rhs = 2 * x + c;
+        questions.push(
+          makeMathQuestion(
+            `solving-equations-${n}`,
+            "solving-equations",
+            "Algebra",
+            `Solve: 2x + ${c} = ${rhs}.`,
+            "Subtract the constant term, then divide by 2 to find x.",
+            `${x}`,
+            [`${x + 1}`, `${x - 1}`, `${x * 2}`]
+          )
+        );
+        break;
+      }
+
+      case "rounding": {
+        const value = 4.12 + n * 0.137;
+        const rounded = Math.round(value * 10) / 10;
+        questions.push(
+          makeMathQuestion(
+            `rounding-${n}`,
+            "rounding",
+            "Number",
+            `Round ${value.toFixed(3)} to 1 decimal place.`,
+            "Look at the hundredths digit to decide whether to round the tenths digit up or keep it the same.",
+            `${rounded.toFixed(1)}`,
+            [`${(rounded + 0.1).toFixed(1)}`, `${(rounded - 0.1).toFixed(1)}`, `${value.toFixed(1)}`]
+          )
+        );
+        break;
+      }
+
+      case "ratio": {
+        const a = 2 * n;
+        const b = 4 * n;
+        questions.push(
+          makeMathQuestion(
+            `ratio-${n}`,
+            "ratio",
+            "Number",
+            `Simplify the ratio ${a}:${b}.`,
+            "Divide both parts by the highest common factor.",
+            `1:2`,
+            [`2:1`, `2:4`, `1:4`]
+          )
+        );
+        break;
+      }
+
+      case "form-solve-equations": {
+        const x = 8 + n;
+        const add = 3 + n;
+        const total = x + add;
+        questions.push(
+          makeMathQuestion(
+            `form-solve-equations-${n}`,
+            "form-solve-equations",
+            "Algebra",
+            `A number plus ${add} is ${total}. What is the number?`,
+            "Write the situation as x + ${add} = ${total}, then subtract ${add}.",
+            `${x}`,
+            [`${x + 2}`, `${x - 2}`, `${total}`]
+          )
+        );
+        break;
+      }
+
+      case "enlargement": {
+        const scale = 2 + (n % 4);
+        const length = 3 + n;
+        const newLength = scale * length;
+        questions.push(
+          makeMathQuestion(
+            `enlargement-${n}`,
+            "enlargement",
+            "Geometry",
+            `A line is enlarged by scale factor ${scale}. The original length is ${length} cm. What is the new length?`,
+            "Multiply the original length by the scale factor.",
+            `${newLength} cm`,
+            [`${length + scale} cm`, `${length - scale} cm`, `${newLength + scale} cm`]
+          )
+        );
+        break;
+      }
+
+      case "pythagoras": {
+        const a = 3 + n;
+        const b = 4 + n;
+        const c = Math.sqrt(a * a + b * b);
+        questions.push(
+          makeMathQuestion(
+            `pythagoras-${n}`,
+            "pythagoras",
+            "Geometry",
+            `A right-angled triangle has sides ${a} cm and ${b} cm. What is the hypotenuse?`,
+            "Use Pythagoras' theorem: a² + b² = c².",
+            `${c.toFixed(2)} cm`,
+            [`${(c + 1).toFixed(2)} cm`, `${(c - 1).toFixed(2)} cm`, `${(a + b).toFixed(2)} cm`]
+          )
+        );
+        break;
+      }
+
+      case "tree-diagrams": {
+        questions.push(
+          makeMathQuestion(
+            `tree-diagrams-${n}`,
+            "tree-diagrams",
+            "Probability",
+            "Two outcomes from a tree diagram have probabilities that add to 1. Which statement is correct?",
+            "Probabilities from one point must total 1.",
+            "They add to 1",
+            ["They add to 2", "They multiply to 1", "They must be equal"]
+          )
+        );
+        break;
+      }
+
+      case "angles-polygons": {
+        const sides = 5 + (n % 5);
+        const sum = (sides - 2) * 180;
+        questions.push(
+          makeMathQuestion(
+            `angles-polygons-${n}`,
+            "angles-polygons",
+            "Geometry",
+            `What is the sum of the interior angles of a ${sides}-sided polygon?`,
+            "Use the formula (n - 2) × 180.",
+            `${sum}°`,
+            [`${sides * 180}°`, `${sides * 90}°`, `${sum - 180}°`]
+          )
+        );
+        break;
+      }
+
+      case "factor": {
+        const value = 12 + n * 2;
+        const factors = [];
+        for (let f = 1; f <= value; f++) if (value % f === 0) factors.push(f);
+        questions.push(
+          makeMathQuestion(
+            `factor-${n}`,
+            "factor",
+            "Algebra",
+            `Which number is a factor of ${value}?`,
+            "A factor divides the number exactly with no remainder.",
+            `${pick(factors, n)}`,
+            [`${value + 1}`, `${value - 1}`, `${value + 2}`]
+          )
+        );
+        break;
+      }
+
+      case "prime": {
+        const value = 17 + n * 2;
+        const isPrime = (x: number) => {
+          if (x < 2) return false;
+          for (let d = 2; d * d <= x; d++) if (x % d === 0) return false;
+          return true;
+        };
+        questions.push(
+          makeMathQuestion(
+            `prime-${n}`,
+            "prime",
+            "Number",
+            `Is ${value} a prime number?`,
+            "A prime number has exactly two factors: 1 and itself.",
+            isPrime(value) ? "Yes" : "No",
+            isPrime(value) ? ["No", "Not sure", "Only sometimes"] : ["Yes", "Not sure", "Only sometimes"]
+          )
+        );
+        break;
+      }
+
+      case "decimal-place": {
+        const value = 4.321 + n * 0.11;
+        const rounded = Math.round(value * 100) / 100;
+        questions.push(
+          makeMathQuestion(
+            `decimal-place-${n}`,
+            "decimal-place",
+            "Number",
+            `Round ${value.toFixed(3)} to 2 decimal places.`,
+            "Check the third decimal place to decide whether to round up.",
+            `${rounded.toFixed(2)}`,
+            [`${(rounded + 0.01).toFixed(2)}`, `${(rounded - 0.01).toFixed(2)}`, `${value.toFixed(2)}`]
+          )
+        );
+        break;
+      }
+
+      case "significant-figure": {
+        const value = 12340 + n * 137;
+        const rounded = Math.round(value / 1000) * 1000;
+        questions.push(
+          makeMathQuestion(
+            `significant-figure-${n}`,
+            "significant-figure",
+            "Number",
+            `Round ${value} to 2 significant figures.`,
+            "Start at the first non-zero digit and round to the second significant digit.",
+            `${rounded}`,
+            [`${rounded + 1000}`, `${rounded - 1000}`, `${value}`]
+          )
+        );
+        break;
+      }
+
+      case "scale-factor": {
+        const original = 4 + n;
+        const scale = 2 + (n % 3);
+        const newLength = original * scale;
+        questions.push(
+          makeMathQuestion(
+            `scale-factor-${n}`,
+            "scale-factor",
+            "Geometry",
+            `A shape has a length of ${original} cm and is enlarged to ${newLength} cm. What is the scale factor?`,
+            "Divide the new length by the original length.",
+            `${scale}`,
+            [`${scale + 1}`, `${scale - 1}`, `${newLength}`]
+          )
+        );
+        break;
+      }
+
+      case "factorise": {
+        const a = 2 + n;
+        const b = 4 + n * 2;
+        const common = Math.min(a, b);
+        questions.push(
+          makeMathQuestion(
+            `factorise-${n}`,
+            "factorise",
+            "Algebra",
+            `Factorise: ${a}x + ${b}.`,
+            "Find the highest common factor of the terms and factor it out.",
+            `${common}(x + ${b / common})`,
+            [`x(${a} + ${b})`, `${a}(x + ${b})`, `${common}x + ${b}`]
+          )
+        );
+        break;
+      }
+
+      case "probability": {
+        const num = 1;
+        const den = 6;
+        questions.push(
+          makeMathQuestion(
+            `probability-${n}`,
+            "probability",
+            "Probability",
+            `What is the probability of rolling a 3 on a fair six-sided die?`,
+            "There is 1 favourable outcome out of 6 equally likely outcomes.",
+            `1/6`,
+            [`1/3`, `1/2`, `3/6`]
+          )
+        );
+        break;
+      }
+
+      case "interest": {
+        const principal = 100 + n * 10;
+        const rate = 5 + (n % 6);
+        const interest = (principal * rate) / 100;
+        questions.push(
+          makeMathQuestion(
+            `interest-${n}`,
+            "interest",
+            "Number",
+            `Find the simple interest on £${principal} at ${rate}% for 1 year.`,
+            "Simple interest = principal × rate × time.",
+            `£${interest.toFixed(2)}`,
+            [`£${principal.toFixed(2)}`, `£${(interest + 10).toFixed(2)}`, `£${(principal * rate).toFixed(2)}`]
+          )
+        );
+        break;
+      }
+
+      case "cellular-processes": {
+        questions.push(
+          makeScienceQuestion(
+            `cellular-processes-${n}`,
+            "cellular-processes",
+            "Biology",
+            "Which process releases energy in cells?",
+            "Respiration releases energy from glucose in living cells.",
+            "Respiration",
+            ["Digestion", "Evaporation", "Diffusion"]
+          )
+        );
+        break;
+      }
+
+      case "cell-differentiation": {
+        questions.push(
+          makeScienceQuestion(
+            `cell-differentiation-${n}`,
+            "cell-differentiation",
+            "Biology",
+            "What is cell differentiation?",
+            "Differentiation is when cells become specialised for a particular job.",
+            "Cells becoming specialised",
+            ["Cells dividing", "Cells shrinking", "Cells moving randomly"]
+          )
+        );
+        break;
+      }
+
+      case "osmosis": {
+        questions.push(
+          makeScienceQuestion(
+            `osmosis-${n}`,
+            "osmosis",
+            "Biology",
+            "What is osmosis?",
+            "Osmosis is the movement of water through a partially permeable membrane.",
+            "The movement of water",
+            ["The movement of oxygen", "The movement of sugar", "The movement of heat"]
+          )
+        );
+        break;
+      }
+
+      case "enzyme": {
+        questions.push(
+          makeScienceQuestion(
+            `enzyme-${n}`,
+            "enzyme",
+            "Biology",
+            "What is the main role of an enzyme?",
+            "Enzymes are biological catalysts that speed up reactions.",
+            "To speed up reactions",
+            ["To store DNA", "To make cells bigger", "To produce light"]
+          )
+        );
+        break;
+      }
+
+      case "active-site": {
+        questions.push(
+          makeScienceQuestion(
+            `active-site-${n}`,
+            "active-site",
+            "Biology",
+            "Where does a substrate bind to an enzyme?",
+            "The substrate fits into the active site.",
+            "The active site",
+            ["The nucleus", "The cell wall", "The cytoplasm"]
+          )
+        );
+        break;
+      }
+
+      case "digestion": {
+        questions.push(
+          makeScienceQuestion(
+            `digestion-${n}`,
+            "digestion",
+            "Biology",
+            "Where does most nutrient absorption happen?",
+            "Most absorption happens in the small intestine.",
+            "Small intestine",
+            ["Stomach", "Mouth", "Large intestine"]
+          )
+        );
+        break;
+      }
+
+      case "nutrition": {
+        questions.push(
+          makeScienceQuestion(
+            `nutrition-${n}`,
+            "nutrition",
+            "Biology",
+            "Which nutrient is needed for growth and repair?",
+            "Protein is needed for growth and repair of body tissues.",
+            "Protein",
+            ["Carbohydrate", "Fat", "Fibre"]
+          )
+        );
+        break;
+      }
+
+      case "energy": {
+        questions.push(
+          makeScienceQuestion(
+            `energy-${n}`,
+            "energy",
+            "Physics",
+            "What does the law of conservation of energy state?",
+            "Energy cannot be created or destroyed, only transferred or stored in different ways.",
+            "Energy cannot be created or destroyed",
+            ["Energy is always lost", "Energy can disappear", "Energy is only electrical"]
+          )
+        );
+        break;
+      }
+
+      case "work-power": {
+        const force = 10 + n;
+        const distance = 5 + n;
+        const work = force * distance;
+        questions.push(
+          makeScienceQuestion(
+            `work-power-${n}`,
+            "work-power",
+            "Physics",
+            `A force of ${force} N moves an object ${distance} m. How much work is done?`,
+            "Work = force × distance.",
+            `${work} J`,
+            [`${force + distance} J`, `${work + 10} J`, `${force * 2} J`]
+          )
+        );
+        break;
+      }
+
+      case "energy-stores": {
+        questions.push(
+          makeScienceQuestion(
+            `energy-stores-${n}`,
+            "energy-stores",
+            "Physics",
+            "Which of these is an energy store?",
+            "Energy can be stored chemically, thermally, kinetically, gravitationally, elastically, nuclear or magnetically.",
+            "Chemical energy",
+            ["Sound energy", "Light energy", "Wave energy"]
+          )
+        );
+        break;
+      }
+
+      case "energy-transfers": {
+        questions.push(
+          makeScienceQuestion(
+            `energy-transfers-${n}`,
+            "energy-transfers",
+            "Physics",
+            "What happens as a ball falls from a height?",
+            "Gravitational potential energy is transferred into kinetic energy.",
+            "Potential energy changes to kinetic energy",
+            ["Kinetic energy changes to chemical energy", "Heat changes to light energy", "Electrical energy changes to sound energy"]
+          )
+        );
+        break;
+      }
+
+      case "energy-efficiency": {
+        questions.push(
+          makeScienceQuestion(
+            `energy-efficiency-${n}`,
+            "energy-efficiency",
+            "Physics",
+            "What does 80% efficiency mean?",
+            "80% of the input energy is transferred usefully.",
+            "80% of the input energy is useful",
+            ["80% of the energy is wasted", "The machine has no losses", "The machine creates energy"]
+          )
+        );
+        break;
+      }
+
+      case "power": {
+        const energy = 100 + n * 10;
+        const time = 5 + n;
+        const power = energy / time;
+        questions.push(
+          makeScienceQuestion(
+            `power-${n}`,
+            "power",
+            "Physics",
+            `If ${energy} J is transferred in ${time} s, what is the power?`,
+            "Power = energy ÷ time.",
+            `${power.toFixed(2)} W`,
+            [`${(power + 1).toFixed(2)} W`, `${(power - 1).toFixed(2)} W`, `${(energy * time).toFixed(2)} W`]
+          )
+        );
+        break;
+      }
+
+      case "non-renewable": {
+        questions.push(
+          makeScienceQuestion(
+            `non-renewable-${n}`,
+            "non-renewable",
+            "Physics",
+            "Which is a non-renewable energy source?",
+            "Coal is a fossil fuel and will eventually run out.",
+            "Coal",
+            ["Wind", "Solar", "Hydroelectric"]
+          )
+        );
+        break;
+      }
+
+      case "renewable": {
+        questions.push(
+          makeScienceQuestion(
+            `renewable-${n}`,
+            "renewable",
+            "Physics",
+            "Which is a renewable energy source?",
+            "Wind is naturally replenished.",
+            "Wind",
+            ["Coal", "Natural gas", "Oil"]
+          )
+        );
+        break;
+      }
+
+      case "earth-science": {
+        questions.push(
+          makeScienceQuestion(
+            `earth-science-${n}`,
+            "earth-science",
+            "Earth Science",
+            "What are the three main layers of the Earth?",
+            "The Earth is made up of the crust, mantle and core.",
+            "Crust, mantle and core",
+            ["Crust, lava and magma", "Mantle, ocean and core", "Air, crust and core"]
+          )
+        );
+        break;
+      }
+
+      case "atmosphere": {
+        questions.push(
+          makeScienceQuestion(
+            `atmosphere-${n}`,
+            "atmosphere",
+            "Earth Science",
+            "Which gas makes up most of Earth's atmosphere?",
+            "Nitrogen makes up about 78% of the atmosphere.",
+            "Nitrogen",
+            ["Oxygen", "Carbon dioxide", "Hydrogen"]
+          )
+        );
+        break;
+      }
+
+      case "resources": {
+        questions.push(
+          makeScienceQuestion(
+            `resources-${n}`,
+            "resources",
+            "Earth Science",
+            "Which of these is a finite resource?",
+            "Oil is finite because it will eventually run out.",
+            "Oil",
+            ["Trees", "Wind", "Sunlight"]
+          )
+        );
+        break;
+      }
     }
   }
 
