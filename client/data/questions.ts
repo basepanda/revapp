@@ -1,3 +1,4 @@
+import { SCIENCE_QUESTIONS } from "./scienceQuestions";
 export interface Question {
   id: string;
   topic: string;
@@ -420,281 +421,7 @@ function generateQuestions(topicId: string): Question[] {
         break;
       }
 
-      case "cellular-processes": {
-        questions.push(
-          makeScienceQuestion(
-            `cellular-processes-${n}`,
-            "cellular-processes",
-            "Biology",
-            "Which process releases energy in cells?",
-            "Respiration releases energy from glucose in living cells.",
-            "Respiration",
-            ["Digestion", "Evaporation", "Diffusion"]
-          )
-        );
-        break;
-      }
-
-      case "cell-differentiation": {
-        questions.push(
-          makeScienceQuestion(
-            `cell-differentiation-${n}`,
-            "cell-differentiation",
-            "Biology",
-            "What is cell differentiation?",
-            "Differentiation is when cells become specialised for a particular job.",
-            "Cells becoming specialised",
-            ["Cells dividing", "Cells shrinking", "Cells moving randomly"]
-          )
-        );
-        break;
-      }
-
-      case "osmosis": {
-        questions.push(
-          makeScienceQuestion(
-            `osmosis-${n}`,
-            "osmosis",
-            "Biology",
-            "What is osmosis?",
-            "Osmosis is the movement of water through a partially permeable membrane.",
-            "The movement of water",
-            ["The movement of oxygen", "The movement of sugar", "The movement of heat"]
-          )
-        );
-        break;
-      }
-
-      case "enzyme": {
-        questions.push(
-          makeScienceQuestion(
-            `enzyme-${n}`,
-            "enzyme",
-            "Biology",
-            "What is the main role of an enzyme?",
-            "Enzymes are biological catalysts that speed up reactions.",
-            "To speed up reactions",
-            ["To store DNA", "To make cells bigger", "To produce light"]
-          )
-        );
-        break;
-      }
-
-      case "active-site": {
-        questions.push(
-          makeScienceQuestion(
-            `active-site-${n}`,
-            "active-site",
-            "Biology",
-            "Where does a substrate bind to an enzyme?",
-            "The substrate fits into the active site.",
-            "The active site",
-            ["The nucleus", "The cell wall", "The cytoplasm"]
-          )
-        );
-        break;
-      }
-
-      case "digestion": {
-        questions.push(
-          makeScienceQuestion(
-            `digestion-${n}`,
-            "digestion",
-            "Biology",
-            "Where does most nutrient absorption happen?",
-            "Most absorption happens in the small intestine.",
-            "Small intestine",
-            ["Stomach", "Mouth", "Large intestine"]
-          )
-        );
-        break;
-      }
-
-      case "nutrition": {
-        questions.push(
-          makeScienceQuestion(
-            `nutrition-${n}`,
-            "nutrition",
-            "Biology",
-            "Which nutrient is needed for growth and repair?",
-            "Protein is needed for growth and repair of body tissues.",
-            "Protein",
-            ["Carbohydrate", "Fat", "Fibre"]
-          )
-        );
-        break;
-      }
-
-      case "energy": {
-        questions.push(
-          makeScienceQuestion(
-            `energy-${n}`,
-            "energy",
-            "Physics",
-            "What does the law of conservation of energy state?",
-            "Energy cannot be created or destroyed, only transferred or stored in different ways.",
-            "Energy cannot be created or destroyed",
-            ["Energy is always lost", "Energy can disappear", "Energy is only electrical"]
-          )
-        );
-        break;
-      }
-
-      case "work-power": {
-        const force = 10 + n;
-        const distance = 5 + n;
-        const work = force * distance;
-        questions.push(
-          makeScienceQuestion(
-            `work-power-${n}`,
-            "work-power",
-            "Physics",
-            `A force of ${force} N moves an object ${distance} m. How much work is done?`,
-            "Work = force × distance.",
-            `${work} J`,
-            [`${force + distance} J`, `${work + 10} J`, `${force * 2} J`]
-          )
-        );
-        break;
-      }
-
-      case "energy-stores": {
-        questions.push(
-          makeScienceQuestion(
-            `energy-stores-${n}`,
-            "energy-stores",
-            "Physics",
-            "Which of these is an energy store?",
-            "Energy can be stored chemically, thermally, kinetically, gravitationally, elastically, nuclear or magnetically.",
-            "Chemical energy",
-            ["Sound energy", "Light energy", "Wave energy"]
-          )
-        );
-        break;
-      }
-
-      case "energy-transfers": {
-        questions.push(
-          makeScienceQuestion(
-            `energy-transfers-${n}`,
-            "energy-transfers",
-            "Physics",
-            "What happens as a ball falls from a height?",
-            "Gravitational potential energy is transferred into kinetic energy.",
-            "Potential energy changes to kinetic energy",
-            ["Kinetic energy changes to chemical energy", "Heat changes to light energy", "Electrical energy changes to sound energy"]
-          )
-        );
-        break;
-      }
-
-      case "energy-efficiency": {
-        questions.push(
-          makeScienceQuestion(
-            `energy-efficiency-${n}`,
-            "energy-efficiency",
-            "Physics",
-            "What does 80% efficiency mean?",
-            "80% of the input energy is transferred usefully.",
-            "80% of the input energy is useful",
-            ["80% of the energy is wasted", "The machine has no losses", "The machine creates energy"]
-          )
-        );
-        break;
-      }
-
-      case "power": {
-        const energy = 100 + n * 10;
-        const time = 5 + n;
-        const power = energy / time;
-        questions.push(
-          makeScienceQuestion(
-            `power-${n}`,
-            "power",
-            "Physics",
-            `If ${energy} J is transferred in ${time} s, what is the power?`,
-            "Power = energy ÷ time.",
-            `${power.toFixed(2)} W`,
-            [`${(power + 1).toFixed(2)} W`, `${(power - 1).toFixed(2)} W`, `${(energy * time).toFixed(2)} W`]
-          )
-        );
-        break;
-      }
-
-      case "non-renewable": {
-        questions.push(
-          makeScienceQuestion(
-            `non-renewable-${n}`,
-            "non-renewable",
-            "Physics",
-            "Which is a non-renewable energy source?",
-            "Coal is a fossil fuel and will eventually run out.",
-            "Coal",
-            ["Wind", "Solar", "Hydroelectric"]
-          )
-        );
-        break;
-      }
-
-      case "renewable": {
-        questions.push(
-          makeScienceQuestion(
-            `renewable-${n}`,
-            "renewable",
-            "Physics",
-            "Which is a renewable energy source?",
-            "Wind is naturally replenished.",
-            "Wind",
-            ["Coal", "Natural gas", "Oil"]
-          )
-        );
-        break;
-      }
-
-      case "earth-science": {
-        questions.push(
-          makeScienceQuestion(
-            `earth-science-${n}`,
-            "earth-science",
-            "Earth Science",
-            "What are the three main layers of the Earth?",
-            "The Earth is made up of the crust, mantle and core.",
-            "Crust, mantle and core",
-            ["Crust, lava and magma", "Mantle, ocean and core", "Air, crust and core"]
-          )
-        );
-        break;
-      }
-
-      case "atmosphere": {
-        questions.push(
-          makeScienceQuestion(
-            `atmosphere-${n}`,
-            "atmosphere",
-            "Earth Science",
-            "Which gas makes up most of Earth's atmosphere?",
-            "Nitrogen makes up about 78% of the atmosphere.",
-            "Nitrogen",
-            ["Oxygen", "Carbon dioxide", "Hydrogen"]
-          )
-        );
-        break;
-      }
-
-      case "resources": {
-        questions.push(
-          makeScienceQuestion(
-            `resources-${n}`,
-            "resources",
-            "Earth Science",
-            "Which of these is a finite resource?",
-            "Oil is finite because it will eventually run out.",
-            "Oil",
-            ["Trees", "Wind", "Sunlight"]
-          )
-        );
-        break;
-      }
+      
     }
   }
 
@@ -703,12 +430,64 @@ function generateQuestions(topicId: string): Question[] {
 
 export function getAllQuestions(): Question[] {
   const allQuestions: Question[] = [];
+
   TOPICS.forEach((topic) => {
-    allQuestions.push(...generateQuestions(topic.id));
+    if (SCIENCE_QUESTIONS[topic.id]) {
+      allQuestions.push(...SCIENCE_QUESTIONS[topic.id]);
+    } else {
+      allQuestions.push(...generateQuestions(topic.id));
+    }
   });
+
+  return allQuestions.map(shuffleQuestion);
+}
+/*
+
+export function getAllQuestions(): Question[] {
+  const allQuestions: Question[] = [];
+
+  TOPICS.forEach((topic) => {
+    if (SCIENCE_QUESTIONS[topic.id]) {
+      allQuestions.push(...SCIENCE_QUESTIONS[topic.id]);
+    } else {
+      allQuestions.push(...generateQuestions(topic.id));
+    }
+  });
+
   return allQuestions;
+}
+*/
+
+function shuffleQuestion(question: Question): Question {
+  const correctOption = question.options[question.correctAnswer];
+
+  const options = [...question.options];
+
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+
+  return {
+    ...question,
+    options,
+    correctAnswer: options.indexOf(correctOption),
+  };
 }
 
 export function getQuestionsByTopic(topicId: string): Question[] {
+  const questions = SCIENCE_QUESTIONS[topicId]
+    ? SCIENCE_QUESTIONS[topicId]
+    : generateQuestions(topicId);
+
+  return questions.map(shuffleQuestion);
+}
+/*
+export function getQuestionsByTopic(topicId: string): Question[] {
+  if (SCIENCE_QUESTIONS[topicId]) {
+    return SCIENCE_QUESTIONS[topicId];
+  }
+
   return generateQuestions(topicId);
 }
+*/
