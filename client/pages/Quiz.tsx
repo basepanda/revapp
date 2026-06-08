@@ -1,15 +1,18 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { getQuestionsByTopic, TOPICS } from "@/data/questions";
 import { ChevronLeft, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { useQuizSession } from "@/hooks/useQuizSession";
 
 export default function Quiz() {
   const { topicId } = useParams<{ topicId: string }>();
+  const { currentScore, updateScore } = useQuizSession(topicId || "");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [streak, setStreak] = useState(0);
   const [totalAnswered, setTotalAnswered] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
 
   const topic = TOPICS.find((t) => t.id === topicId);
   const questions = useMemo(
@@ -17,6 +20,15 @@ export default function Quiz() {
     [topicId]
   );
   const currentQuestion = questions[questionIndex];
+
+  useEffect(() => {
+    if (currentScore) {
+      setQuestionIndex(currentScore.questionIndex);
+      setStreak(currentScore.streak);
+      setTotalAnswered(currentScore.totalAnswered);
+      setCorrectAnswers(currentScore.correctAnswers);
+    }
+  }, []);
 
   if (!topic || questions.length === 0) {
     return (
@@ -41,10 +53,28 @@ export default function Quiz() {
     if (answered) return;
     setSelectedAnswer(optionIndex);
     setAnswered(true);
-    setTotalAnswered(totalAnswered + 1);
+
+    const newTotal = totalAnswered + 1;
+    setTotalAnswered(newTotal);
 
     if (optionIndex === currentQuestion.correctAnswer) {
-      setStreak(streak + 1);
+      const newStreak = streak + 1;
+      const newCorrect = correctAnswers + 1;
+      setStreak(newStreak);
+      setCorrectAnswers(newCorrect);
+      updateScore({
+        streak: newStreak,
+        totalAnswered: newTotal,
+        correctAnswers: newCorrect,
+        questionIndex,
+      });
+    } else {
+      updateScore({
+        streak,
+        totalAnswered: newTotal,
+        correctAnswers,
+        questionIndex,
+      });
     }
   };
 
@@ -56,9 +86,16 @@ export default function Quiz() {
         setAnswered(false);
       } else {
         // Move to next question if correct
-        setQuestionIndex((questionIndex + 1) % questions.length);
+        const nextIndex = (questionIndex + 1) % questions.length;
+        setQuestionIndex(nextIndex);
         setSelectedAnswer(null);
         setAnswered(false);
+        updateScore({
+          streak,
+          totalAnswered,
+          correctAnswers,
+          questionIndex: nextIndex,
+        });
       }
     }
   };
@@ -69,6 +106,7 @@ export default function Quiz() {
     setAnswered(false);
     setStreak(0);
     setTotalAnswered(0);
+    setCorrectAnswers(0);
   };
 
   const isCorrect = answered && selectedAnswer === currentQuestion.correctAnswer;
@@ -119,15 +157,17 @@ export default function Quiz() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-8 md:p-12">
             {/* Question */}
-            <div className="mb-8 animate-slide-up">
+            <div className="mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
                 {currentQuestion.question}
               </h2>
 
-              {/* Explanation */}
-              <p className="text-slate-600 bg-slate-50 rounded-lg p-4 mb-8 border border-slate-200">
-                {currentQuestion.explanation}
-              </p>
+              {/* Explanation - only show when answered incorrectly */}
+              {isWrong && (
+                <p className="text-slate-600 bg-slate-50 rounded-lg p-4 mb-8 border border-slate-200">
+                  {currentQuestion.explanation}
+                </p>
+              )}
 
               {/* Options */}
               <div className="space-y-3">
@@ -184,7 +224,7 @@ export default function Quiz() {
 
             {/* Feedback */}
             {answered && (
-              <div className={`p-4 rounded-xl mb-8 animate-slide-up ${
+              <div className={`p-4 rounded-xl mb-8 ${
                 isCorrect
                   ? "bg-emerald-50 border border-emerald-200"
                   : "bg-red-50 border border-red-200"
@@ -259,7 +299,7 @@ export default function Quiz() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-emerald-600">
-                    {Math.round((streak / totalAnswered) * 100)}%
+                    {totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0}%
                   </div>
                   <div className="text-xs text-slate-600">Accuracy</div>
                 </div>

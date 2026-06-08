@@ -62,7 +62,13 @@ function pick<T>(arr: T[], i: number) {
 }
 
 function shuffleOptions(correct: string, wrongs: string[]) {
-  const options = [correct, ...wrongs.slice(0, 3)];
+  const uniqueWrongs = Array.from(new Set(wrongs)).filter((w) => w !== correct).slice(0, 3);
+
+  if (uniqueWrongs.length < 3) {
+    console.warn(`Not enough unique wrong answers for "${correct}". Only ${uniqueWrongs.length} unique wrongs.`);
+  }
+
+  const options = [correct, ...uniqueWrongs];
   return options;
 }
 
@@ -319,6 +325,14 @@ function generateQuestions(topicId: string): Question[] {
       case "decimal-place": {
         const value = 4.321 + n * 0.11;
         const rounded = Math.round(value * 100) / 100;
+        const wrong1 = Math.round((rounded + 0.01) * 100) / 100;
+        const wrong2 = Math.round((rounded - 0.01) * 100) / 100;
+        const wrong3 = Math.round(value * 10) / 10;
+
+        const wrongs = [wrong1.toFixed(2), wrong2.toFixed(2), wrong3.toFixed(2)].filter(
+          (w) => w !== rounded.toFixed(2)
+        );
+
         questions.push(
           makeMathQuestion(
             `decimal-place-${n}`,
@@ -327,7 +341,7 @@ function generateQuestions(topicId: string): Question[] {
             `Round ${value.toFixed(3)} to 2 decimal places.`,
             "Check the third decimal place to decide whether to round up.",
             `${rounded.toFixed(2)}`,
-            [`${(rounded + 0.01).toFixed(2)}`, `${(rounded - 0.01).toFixed(2)}`, `${value.toFixed(2)}`]
+            wrongs.length >= 3 ? wrongs : [`${(rounded + 0.01).toFixed(2)}`, `${(rounded - 0.01).toFixed(2)}`, `${(rounded + 0.02).toFixed(2)}`]
           )
         );
         break;
